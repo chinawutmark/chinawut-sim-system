@@ -1,6 +1,6 @@
 import type { ComponentDefinition, InterfaceType, PinCapability, PinDefinition } from "../hardware/types.js";
 import type { ComponentRegistry } from "../hardware/registry.js";
-import { resolveEndpoint } from "./project.js";
+import { resolveEndpoint } from "./resolve.js";
 import { PROJECT_SCHEMA_VERSION, type ComponentInstance, type EndpointFunction, type Net, type Project, type ValidationIssue } from "./types.js";
 
 const issue = (code: string, severity: "error" | "warning", message: string, path?: string): ValidationIssue =>
