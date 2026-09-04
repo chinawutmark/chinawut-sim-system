@@ -1,16 +1,16 @@
 import { HARDWARE_SCHEMA_VERSION, type ComponentDefinition, type InterfaceDefinition, type NumericRange, type PinDefinition } from "./types.js";
 
-export interface ValidationIssue { path: string; code: string; message: string }
+export interface HardwareValidationIssue { path: string; code: string; message: string }
 export class DefinitionValidationError extends Error {
-  constructor(public readonly issues: readonly ValidationIssue[]) { super(issues.map(i => `${i.path}: ${i.message}`).join("; ")); this.name = "DefinitionValidationError"; }
+  constructor(public readonly issues: readonly HardwareValidationIssue[]) { super(issues.map(i => `${i.path}: ${i.message}`).join("; ")); this.name = "DefinitionValidationError"; }
 }
-const issue = (path: string, code: string, message: string): ValidationIssue => ({ path, code, message });
-function range(value: NumericRange | undefined, path: string, issues: ValidationIssue[]): void {
+const issue = (path: string, code: string, message: string): HardwareValidationIssue => ({ path, code, message });
+function range(value: NumericRange | undefined, path: string, issues: HardwareValidationIssue[]): void {
   if (!value) return;
   if (!Number.isFinite(value.min) || !Number.isFinite(value.max) || value.min > value.max) issues.push(issue(path, "invalid-range", "minimum must be finite and no greater than maximum"));
   if (!value.unit.trim()) issues.push(issue(`${path}.unit`, "missing-unit", "unit is required"));
 }
-function pins(values: readonly PinDefinition[], issues: ValidationIssue[]): Set<string> {
+function pins(values: readonly PinDefinition[], issues: HardwareValidationIssue[]): Set<string> {
   const names = new Set<string>();
   values.forEach((pin, index) => {
     const primary = [pin.id.toLowerCase(), pin.name.toLowerCase()];
@@ -21,7 +21,7 @@ function pins(values: readonly PinDefinition[], issues: ValidationIssue[]): Set<
   });
   return new Set(values.map(p => p.id));
 }
-function interfaces(values: readonly InterfaceDefinition[], pinIds: Set<string>, issues: ValidationIssue[]): void {
+function interfaces(values: readonly InterfaceDefinition[], pinIds: Set<string>, issues: HardwareValidationIssue[]): void {
   const ids = new Set<string>();
   values.forEach((item, index) => {
     if (ids.has(item.id)) issues.push(issue(`interfaces[${index}].id`, "duplicate-interface", "interface ID is duplicated")); ids.add(item.id);
@@ -33,8 +33,8 @@ function interfaces(values: readonly InterfaceDefinition[], pinIds: Set<string>,
   });
 }
 
-export function validateDefinition(definition: ComponentDefinition): readonly ValidationIssue[] {
-  const issues: ValidationIssue[] = [];
+export function validateDefinition(definition: ComponentDefinition): readonly HardwareValidationIssue[] {
+  const issues: HardwareValidationIssue[] = [];
   if (!/^[a-z0-9]+(?:[._-][a-z0-9]+)+$/.test(definition.id)) issues.push(issue("id", "invalid-id", "use a stable, namespaced lowercase ID"));
   if (definition.schemaVersion !== HARDWARE_SCHEMA_VERSION) issues.push(issue("schemaVersion", "unsupported-schema", `expected ${HARDWARE_SCHEMA_VERSION}`));
   if (!definition.name.trim() || !definition.category.trim()) issues.push(issue("identity", "missing-identity", "name and category are required"));
